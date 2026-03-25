@@ -15,7 +15,6 @@ permissions:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '10'
 
 jobs:
   build-and-test:
@@ -26,8 +25,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -59,8 +56,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node with npm registry
         uses: actions/setup-node@v4
