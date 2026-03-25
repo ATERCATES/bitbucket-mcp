@@ -10,24 +10,22 @@ on:
       - '.github/workflows/auto-publish.yml'
 
 permissions:
-  contents: write # Create tags and releases
-  id-token: write # OIDC authentication to NPM
+  contents: write
+  id-token: write
 
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '9'
 
 jobs:
-  build-and-publish:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -49,57 +47,86 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node with npm registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
 
       - name: Check for unpublished changes
         id: check
         run: |
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
-            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
             echo "First release detected"
           else
-            CHANGES=$(git diff --name-only "$LAST_TAG" HEAD | grep -E '^src/' | wc -l)
+            CHANGES=$(git diff --name-only "$LAST_TAG" HEAD -- src/ | wc -l)
             if [ "$CHANGES" -gt 0 ]; then
-              echo "should_publish=true" >> $GITHUB_OUTPUT
+              echo "should_publish=true" >> "$GITHUB_OUTPUT"
               echo "Source code changes detected: $CHANGES files"
             else
-              echo "should_publish=false" >> $GITHUB_OUTPUT
+              echo "should_publish=false" >> "$GITHUB_OUTPUT"
               echo "No source changes since last tag, skipping publish"
             fi
           fi
 
-      - name: Bump version and tag
+      - name: Bump patch version
         if: steps.check.outputs.should_publish == 'true'
         id: version
         run: |
-          pnpm publish:patch
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
           NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          git add package.json
+          git commit -m "chore: release v${NEW_VERSION}"
+          git tag "v${NEW_VERSION}"
 
-      - name: Publish to npm
+      - name: Publish to npm (Trusted Publishing / OIDC)
         if: steps.check.outputs.should_publish == 'true'
-        run: pnpm publish --no-git-checks
+        run: pnpm publish --provenance --access public --no-git-checks
 
-      - name: Validate server.json
+      - name: Push version commit and tag
         if: steps.check.outputs.should_publish == 'true'
-        run: node scripts/validate-server-json.mjs
+        run: |
+          git push origin HEAD
+          git push origin "v${{ steps.version.outputs.version }}"
 
       - name: Create GitHub Release
         if: steps.check.outputs.should_publish == 'true'
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release ${{ steps.version.outputs.version }}
-          body: |
-            Version ${{ steps.version.outputs.version }}
-            
-            Published to:
-            - NPM: https://npmjs.com/package/@atercates/bitbucket-mcp
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "Release ${{ steps.version.outputs.version }}" \
+            --notes "Version ${{ steps.version.outputs.version }}
+
+          Published to:
+          - NPM: https://npmjs.com/package/@atercates/bitbucket-mcp"
