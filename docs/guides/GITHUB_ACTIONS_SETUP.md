@@ -17,7 +17,7 @@ The `auto-publish.yml` workflow:
 
 ### 1. Create an NPM Token
 
-1. Go to https://npmjs.com/settings/[YOUR_USERNAME]/tokens/new
+1. Go to https://npmjs.com/settings/atercates/tokens/new
 2. Select **Granular Access Token**
 3. Configure:
    - **Token Name**: `github-actions`

@@ -2,7 +2,7 @@
 
 ## TL;DR: Only 1 Secret Required
 
-1. Get NPM token: https://npmjs.com/settings/[YOUR_USERNAME]/tokens
+1. Get NPM token: https://npmjs.com/settings/atercates/tokens
    - Create "Granular Access Token"
    - Give write access to `bitbucket-mcp` package
    - Copy the token

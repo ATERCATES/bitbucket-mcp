@@ -63,7 +63,6 @@ Si necesitas publicar localmente durante desarrollo:
 1. Crea/edita `~/.npmrc`:
 ```bash
 //registry.npmjs.org/:_authToken=YOUR_NPM_TOKEN
-@your-org:registry=https://registry.npmjs.org
 ```
 
 2. O usando CLI:

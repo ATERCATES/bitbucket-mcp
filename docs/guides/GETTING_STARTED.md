@@ -32,7 +32,7 @@ npx -y bitbucket-mcp@latest
 ### Option 3: Local Development
 
 ```bash
-git clone https://github.com/your-org/bitbucket-mcp.git
+git clone https://github.com/atercates/bitbucket-mcp.git
 cd bitbucket-mcp
 pnpm install
 pnpm build
