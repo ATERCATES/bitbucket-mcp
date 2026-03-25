@@ -21,7 +21,7 @@ export function normalizeBitbucketConfig(rawConfig: BitbucketConfig): BitbucketC
       normalizedConfig.baseUrl = "https://api.bitbucket.org/2.0";
     }
 
-    // If users provide https://api.bitbucket.org (without /2.0), ensure /2.0
+    // If users provide https://api.bitbucket.org (without /2.0), ensure /2.0 is used
     if (host === "api.bitbucket.org") {
       const pathname = parsed.pathname.replace(/\/+$/, "");
       if (!pathname.startsWith("/2.0")) {
