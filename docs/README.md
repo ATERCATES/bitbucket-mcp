@@ -10,6 +10,7 @@ Welcome to the Bitbucket MCP (Model Context Protocol) Server documentation. This
 - **[Project Structure](guides/PROJECT_STRUCTURE.md)** - Explanation of files and directories
 - **[Environment Variables](guides/ENVIRONMENT_VARIABLES.md)** - Configuration reference
 - **[NPM Deployment](guides/NPM_DEPLOYMENT.md)** - Publishing to NPM
+- **[GitHub Actions Setup](guides/GITHUB_ACTIONS_SETUP.md)** - Automatic CI/CD configuration
 
 ## What is Bitbucket MCP?
 
@@ -184,6 +185,7 @@ For more details, see [Architecture](architecture/ARCHITECTURE.md).
 - 🚀 See [Getting Started](guides/GETTING_STARTED.md) for setup help
 - ⚙️ Check [Environment Variables](guides/ENVIRONMENT_VARIABLES.md) for config options
 - 📦 See [NPM Deployment](guides/NPM_DEPLOYMENT.md) for publishing
+- ⚡ See [GitHub Actions Setup](guides/GITHUB_ACTIONS_SETUP.md) for CI/CD automation
 - 🐛 Check logs in your platform's log directory (see Getting Started guide)
 
 ## Contributing

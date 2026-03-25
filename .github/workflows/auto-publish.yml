@@ -1,0 +1,134 @@
+name: Auto-publish to NPM and MCP Registry
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/auto-publish.yml'
+
+permissions:
+  contents: write # Allow creating commits and tags
+  id-token: write # Required for OIDC authentication to NPM
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for version detection
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Determine version bump
+        id: bump
+        run: |
+          # Check if there are any unpublished changes
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            # No previous tag, use current version
+            BUMP="none"
+          else
+            # Check if src/ or package.json changed since last tag
+            CHANGES=$(git diff --name-only "$LAST_TAG" HEAD | grep -E '(^src/|^package.json)' || true)
+            if [ -n "$CHANGES" ]; then
+              BUMP="patch"
+            else
+              BUMP="none"
+            fi
+          fi
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+          echo "Version bump: $BUMP"
+
+      - name: Bump version and publish
+        if: steps.bump.outputs.bump != 'none'
+        run: pnpm publish:patch
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get new version
+        if: steps.bump.outputs.bump != 'none'
+        id: newversion
+        run: |
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Install MCP Publisher
+        if: steps.bump.outputs.bump != 'none'
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz -C /tmp mcp-publisher
+          mkdir -p ~/.local/bin
+          mv /tmp/mcp-publisher ~/.local/bin/
+          export PATH="$HOME/.local/bin:$PATH"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Validate server.json
+        if: steps.bump.outputs.bump != 'none'
+        run: node scripts/validate-server-json.mjs
+
+      - name: Login to MCP Registry (OIDC)
+        if: steps.bump.outputs.bump != 'none'
+        run: ~/.local/bin/mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        if: steps.bump.outputs.bump != 'none'
+        run: ~/.local/bin/mcp-publisher publish
+
+      - name: Create release
+        if: steps.bump.outputs.bump != 'none'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.newversion.outputs.version }}
+          release_name: Release ${{ steps.newversion.outputs.version }}
+          body: |
+            Automated release published to NPM and MCP Registry.
+            
+            Version: ${{ steps.newversion.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Notify on skip
+        if: steps.bump.outputs.bump == 'none'
+        run: |
+          echo "No changes to src/ or package.json since last tag. Skipping version bump and publish."
+          echo "If you want to trigger a new version, make changes to src/ or edit package.json"
