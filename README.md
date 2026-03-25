@@ -9,15 +9,17 @@ A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and S
 
 ✨ **Comprehensive Bitbucket Integration** - 59 tools covering repositories, PRs, branches, commits, pipelines, and more
 
-🔒 **Secure Authentication** - Token-based or basic auth with granular permission control
+🔒 **Secure Authentication** - App password tokens or basic auth with granular permission control via Bitbucket
 
-📝 **Well-Documented** - Complete API reference and architecture guides in `/docs`
+📝 **Well-Documented** - Complete API reference, architecture guides, and deployment instructions in `/docs`
 
-🧪 **Fully Tested** - Comprehensive unit test suite with 100% tool coverage
+🧪 **Fully Tested** - Comprehensive unit test suite with full tool coverage (Vitest)
 
-⚡ **Modular Design** - Clean, maintainable architecture organized by feature domain
+⚡ **Modular Design** - Clean, maintainable architecture organized by feature domain (11 handler modules)
 
-🛡️ **Safety First** - Dangerous operations (deletes) require explicit enablement
+🛡️ **Safety First** - Dangerous operations (deletes) require explicit `BITBUCKET_ALLOW_DANGEROUS=true`
+
+🚀 **Production Ready** - Built with pnpm, ESLint, Prettier, and modern TypeScript
 
 ## Quick Start
 
@@ -169,8 +171,10 @@ The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{wor
 ## Documentation
 
 - **[Getting Started Guide](docs/guides/GETTING_STARTED.md)** - Installation, configuration, and basic usage
-- **[Tools Reference](docs/TOOLS.md)** - Complete API documentation for all 59 tools
-- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - Technical design and extension guide
+- **[Tools Reference](docs/TOOLS.md)** - Complete API documentation for all 59 tools with examples
+- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - Technical design, modular structure, and extension guide
+- **[Environment Variables](docs/guides/ENVIRONMENT_VARIABLES.md)** - Complete reference for all configuration options
+- **[NPM Deployment](docs/guides/NPM_DEPLOYMENT.md)** - Publishing and deployment instructions
 - **[Main Documentation](docs/README.md)** - Overview and quick links
 
 ## Development
@@ -192,23 +196,30 @@ pnpm install
 
 ```bash
 pnpm build          # Compile TypeScript
-pnpm lint           # Run ESLint
+pnpm lint           # Run ESLint  
 pnpm format         # Format with Prettier
+pnpm format:check   # Check formatting
 ```
 
 ### Testing
 
 ```bash
-pnpm test           # Run test suite
+pnpm test           # Run Vitest suite
 pnpm test:watch     # Watch mode
 ```
 
 ### Running in Development
 
 ```bash
-pnpm dev            # Run with tsx (no build required)
+pnpm dev            # Run with tsx (watch mode, no build required)
 # OR
 pnpm build && pnpm start
+```
+
+### MCP Inspector (Debugging)
+
+```bash
+pnpm inspector      # Launch interactive MCP inspector to test tools
 ```
 
 ## Project Structure
@@ -320,11 +331,17 @@ MIT License - See [LICENSE](LICENSE) file for details.
 ## Support
 
 - 📖 See [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) for setup help
-- 🔧 Check [docs/TOOLS.md](docs/TOOLS.md) for tool documentation
+- 🔧 Check [docs/TOOLS.md](docs/TOOLS.md) for tool documentation with examples
 - 🏗️ Review [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for technical details
+- ⚙️ Check [docs/guides/ENVIRONMENT_VARIABLES.md](docs/guides/ENVIRONMENT_VARIABLES.md) for all configuration options
+- 🚀 See [docs/guides/NPM_DEPLOYMENT.md](docs/guides/NPM_DEPLOYMENT.md) for deployment to NPM
 - 🐛 Enable logging with `BITBUCKET_LOG_DISABLE=false` for debugging
+- 📝 Check [docs/README.md](docs/README.md) for complete documentation index
 
 ---
 
 **Version:** 5.0.6  
-**Last Updated:** 2024
+**Last Updated:** January 2025  
+**Architecture:** Modular handler-based design with 11 feature modules  
+**Test Framework:** Vitest  
+**Package Manager:** pnpm
