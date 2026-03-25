@@ -3,7 +3,7 @@
 A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and Server APIs. This MCP server enables AI assistants like Claude and Cursor to interact with your Bitbucket repositories, pull requests, pipelines, and other resources.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![npm version](https://badge.fury.io/js/bitbucket-mcp.svg)](https://www.npmjs.com/package/bitbucket-mcp)
+[![npm version](https://badge.fury.io/js/@atercates/bitbucket-mcp.svg)](https://www.npmjs.com/package/@atercates/bitbucket-mcp)
 
 ## Features
 
@@ -26,14 +26,14 @@ A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and S
 ### Installation
 
 ```bash
-# Option 1: Global install with NPM
-npm install -g bitbucket-mcp
+# Option 1: Global install
+pnpm add -g @atercates/bitbucket-mcp
 
 # Option 2: Use with NPX (no installation required)
-npx -y bitbucket-mcp@latest
+npx -y @atercates/bitbucket-mcp@latest
 
 # Option 3: Local development
-git clone <repository>
+git clone https://github.com/ATERCATES/bitbucket-mcp.git
 cd bitbucket-mcp
 pnpm install
 pnpm build
@@ -65,7 +65,7 @@ export BITBUCKET_ALLOW_DANGEROUS=true
 bitbucket-mcp
 
 # If using NPX
-npx -y bitbucket-mcp@latest
+npx -y @atercates/bitbucket-mcp@latest
 
 # If installed locally
 pnpm start
@@ -100,7 +100,7 @@ Or with npx:
   "mcpServers": {
     "bitbucket": {
       "command": "npx",
-      "args": ["-y", "bitbucket-mcp@latest"],
+      "args": ["-y", "@atercates/bitbucket-mcp@latest"],
       "env": {
         "BITBUCKET_TOKEN": "your_app_password",
         "BITBUCKET_WORKSPACE": "my-workspace"
@@ -170,12 +170,8 @@ The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{wor
 
 ## Documentation
 
-- **[Getting Started Guide](docs/guides/GETTING_STARTED.md)** - Installation, configuration, and basic usage
 - **[Tools Reference](docs/TOOLS.md)** - Complete API documentation for all 59 tools with examples
 - **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - Technical design, modular structure, and extension guide
-- **[Environment Variables](docs/guides/ENVIRONMENT_VARIABLES.md)** - Complete reference for all configuration options
-- **[NPM Deployment](docs/guides/NPM_DEPLOYMENT.md)** - Publishing and deployment instructions
-- **[Main Documentation](docs/README.md)** - Overview and quick links
 
 ## Development
 
@@ -187,7 +183,7 @@ The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{wor
 ### Setup
 
 ```bash
-git clone <repository>
+git clone https://github.com/ATERCATES/bitbucket-mcp.git
 cd bitbucket-mcp
 pnpm install
 ```
@@ -250,10 +246,7 @@ src/
    └─ index.ts
 
 docs/
-├─ README.md             # Documentation overview
 ├─ TOOLS.md              # Tools reference
-├─ guides/
-│  └─ GETTING_STARTED.md # Setup guide
 └─ architecture/
    └─ ARCHITECTURE.md    # Technical design
 
@@ -330,18 +323,15 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- 📖 See [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) for setup help
 - 🔧 Check [docs/TOOLS.md](docs/TOOLS.md) for tool documentation with examples
 - 🏗️ Review [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for technical details
-- ⚙️ Check [docs/guides/ENVIRONMENT_VARIABLES.md](docs/guides/ENVIRONMENT_VARIABLES.md) for all configuration options
-- 🚀 See [docs/guides/NPM_DEPLOYMENT.md](docs/guides/NPM_DEPLOYMENT.md) for deployment to NPM
 - 🐛 Enable logging with `BITBUCKET_LOG_DISABLE=false` for debugging
-- 📝 Check [docs/README.md](docs/README.md) for complete documentation index
+- 🐞 Report issues at https://github.com/ATERCATES/bitbucket-mcp/issues
 
 ---
 
-**Version:** 5.0.6  
-**Last Updated:** January 2025  
+**Version:** 1.0.0
+**Last Updated:** March 2026
 **Architecture:** Modular handler-based design with 11 feature modules  
 **Test Framework:** Vitest  
 **Package Manager:** pnpm

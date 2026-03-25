@@ -8,7 +8,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
 const manifest = {
   name: 'Bitbucket MCP',
-  slug: 'bitbucket-mcp',
+  slug: '@atercates/bitbucket-mcp',
   version: pkg.version,
   description: pkg.description,
   homepage: pkg.homepage,

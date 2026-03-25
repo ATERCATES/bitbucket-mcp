@@ -1,48 +1,25 @@
-FROM node:22-alpine as builder
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM node:22-alpine AS build
 
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
-# Copy package files and install dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
+RUN pnpm build && pnpm prune --prod
 
-# Build the application
-RUN pnpm build
+FROM node:22-alpine AS runtime
 
-# Production stage
-FROM node:22-alpine as production
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
+ENV NODE_ENV=production
 WORKDIR /app
 
-# Copy package files and install production dependencies only
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN addgroup -S app && adduser -S app -G app
 
-# Copy build artifacts from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=build /app/package.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
 
-# Create logs directory
-RUN mkdir -p logs
-
-# Set execution permissions
-RUN chmod +x ./dist/index.js
-
-# Environment variables
-ENV NODE_ENV=production
-
-ENV PORT=3000
-
-# Expose port
-EXPOSE 3000
-
-# Run the application
-CMD ["node", "dist/index.js"] 
+USER app
+CMD ["node", "dist/index.js"]

@@ -1,14 +1,14 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "io.github.bitbucket-mcp/bitbucket-mcp",
+  "name": "io.github.ATERCATES/bitbucket-mcp",
   "title": "Bitbucket MCP",
   "description": "Model Context Protocol (MCP) server for Bitbucket Cloud and Server API integration",
-  "version": "5.0.6",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "bitbucket-mcp",
-      "version": "5.0.6",
+      "identifier": "@atercates/bitbucket-mcp",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       }
