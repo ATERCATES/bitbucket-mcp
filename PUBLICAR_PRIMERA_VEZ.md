@@ -61,6 +61,10 @@ Desde la raíz del proyecto:
 pnpm publish
 ```
 
+**Importante:** NPM te pedirá autenticarse. Usa:
+- Username: `atercates`
+- Password: Tu contraseña de npmjs.com (o un token si tienes 2FA)
+
 **Esto hará:**
 1. Ejecutar `pnpm build` automáticamente (hook `prepublishOnly`)
 2. Validar los archivos a publicar (definidos en `"files"` de package.json)
@@ -78,6 +82,15 @@ npm notice name: @atercates/bitbucket-mcp
 npm notice version: 5.0.6
 npm notice [OK] published
 ```
+
+## Después: Usar Trusted Publishing en GitHub
+
+Una vez publicada la primera versión, GitHub Actions usará **Trusted Publishing** (sin tokens).
+
+Ver **[PUBLICAR_CON_TRUSTED_PUBLISHING.md](PUBLICAR_CON_TRUSTED_PUBLISHING.md)** para:
+1. Configurar Trusted Publishing en npmjs.com
+2. El workflow automáticamente publicará sin tokens
+3. Mucho más seguro
 
 ## Paso 5: Verificar la Publicación
 
