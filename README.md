@@ -3,7 +3,7 @@
 A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and Server APIs. This MCP server enables AI assistants like Claude and Cursor to interact with your Bitbucket repositories, pull requests, pipelines, and other resources.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![npm version](https://badge.fury.io/js/@atercates/bitbucket-mcp.svg)](https://www.npmjs.com/package/@atercates/bitbucket-mcp)
+[![npm version](https://img.shields.io/npm/v/@atercates/bitbucket-mcp.svg)](https://www.npmjs.com/package/@atercates/bitbucket-mcp)
 
 ## Features
 
