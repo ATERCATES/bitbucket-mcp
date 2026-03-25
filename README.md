@@ -330,8 +330,6 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** March 2026
 **Architecture:** Modular handler-based design with 11 feature modules  
 **Test Framework:** Vitest  
 **Package Manager:** pnpm
