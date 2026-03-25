@@ -177,7 +177,7 @@ The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{wor
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 24
 - pnpm (or npm)
 
 ### Setup

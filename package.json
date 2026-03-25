@@ -32,9 +32,7 @@
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "inspector": "pnpm dlx @modelcontextprotocol/inspector dist/index.js",
-    "registry:manifest": "node scripts/generate-registry-manifest.cjs",
-    "registry:validate": "node scripts/validate-server-json.mjs"
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector dist/index.js"
   },
   "keywords": [
     "bitbucket",
@@ -65,8 +63,6 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
-    "ajv": "^8.18.0",
-    "ajv-formats": "^3.0.1",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
@@ -78,7 +74,7 @@
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "publishConfig": {
     "access": "public"
