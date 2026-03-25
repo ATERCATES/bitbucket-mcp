@@ -7,6 +7,9 @@ Welcome to the Bitbucket MCP (Model Context Protocol) Server documentation. This
 - **[Getting Started Guide](guides/GETTING_STARTED.md)** - Installation and configuration
 - **[Tools Reference](TOOLS.md)** - Complete list of all available tools
 - **[Architecture](architecture/ARCHITECTURE.md)** - Technical design and structure
+- **[Project Structure](guides/PROJECT_STRUCTURE.md)** - Explanation of files and directories
+- **[Environment Variables](guides/ENVIRONMENT_VARIABLES.md)** - Configuration reference
+- **[NPM Deployment](guides/NPM_DEPLOYMENT.md)** - Publishing to NPM
 
 ## What is Bitbucket MCP?
 
@@ -177,7 +180,10 @@ For more details, see [Architecture](architecture/ARCHITECTURE.md).
 
 - 📖 Check [TOOLS.md](TOOLS.md) for tool-specific documentation
 - 🏗️ Review [Architecture](architecture/ARCHITECTURE.md) for technical details
+- 📁 See [Project Structure](guides/PROJECT_STRUCTURE.md) for file organization
 - 🚀 See [Getting Started](guides/GETTING_STARTED.md) for setup help
+- ⚙️ Check [Environment Variables](guides/ENVIRONMENT_VARIABLES.md) for config options
+- 📦 See [NPM Deployment](guides/NPM_DEPLOYMENT.md) for publishing
 - 🐛 Check logs in your platform's log directory (see Getting Started guide)
 
 ## Contributing
