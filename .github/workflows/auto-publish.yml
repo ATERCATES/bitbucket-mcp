@@ -83,8 +83,6 @@ jobs:
       - name: Publish to npm
         if: steps.check.outputs.should_publish == 'true'
         run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Validate server.json
         if: steps.check.outputs.should_publish == 'true'
@@ -102,7 +100,6 @@ jobs:
             Version ${{ steps.version.outputs.version }}
             
             Published to:
-            - NPM: https://npmjs.com/package/bitbucket-mcp
-            - MCP Registry: https://github.com/modelcontextprotocol/registry
+            - NPM: https://npmjs.com/package/@atercates/bitbucket-mcp
           draft: false
           prerelease: false
