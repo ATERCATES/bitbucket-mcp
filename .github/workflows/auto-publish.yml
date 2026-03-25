@@ -52,48 +52,27 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Check for unpublished changes
-        id: check
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "First release detected"
-          else
-            CHANGES=$(git diff --name-only "$LAST_TAG" HEAD -- src/ | wc -l)
-            if [ "$CHANGES" -gt 0 ]; then
-              echo "should_publish=true" >> "$GITHUB_OUTPUT"
-              echo "Source code changes detected: $CHANGES files"
-            else
-              echo "should_publish=false" >> "$GITHUB_OUTPUT"
-              echo "No source changes since last tag, skipping publish"
-            fi
-          fi
-
       - name: Bump patch version
-        if: steps.check.outputs.should_publish == 'true'
         id: version
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          NEW_VERSION=$(npm version patch --no-git-tag-version | sed 's/^v//')
+          npm version patch --no-git-tag-version --ignore-scripts
+          NEW_VERSION=$(node -p "require('./package.json').version")
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           git add package.json
-          git commit -m "chore: release v${NEW_VERSION}"
+          git commit -m "chore: release v${NEW_VERSION} [skip ci]"
           git tag "v${NEW_VERSION}"
 
       - name: Publish to npm (Trusted Publishing / OIDC)
-        if: steps.check.outputs.should_publish == 'true'
         run: pnpm publish --provenance --access public --no-git-checks
 
       - name: Push version commit and tag
-        if: steps.check.outputs.should_publish == 'true'
         run: |
           git push origin HEAD
           git push origin "v${{ steps.version.outputs.version }}"
 
       - name: Create GitHub Release
-        if: steps.check.outputs.should_publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
