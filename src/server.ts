@@ -1,0 +1,152 @@
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  ListToolsRequestSchema,
+  McpError,
+} from "@modelcontextprotocol/sdk/types.js";
+import axios from "axios";
+import { BitbucketClient } from "./client.js";
+import { BitbucketConfig } from "./types.js";
+import { loadConfigFromEnv } from "./config.js";
+import { logger } from "./logger.js";
+import { allModules } from "./handlers/index.js";
+import { ToolDefinition, ToolHandler } from "./handlers/types.js";
+
+/**
+ * Bitbucket MCP Server with modular handlers
+ */
+export class BitbucketMcpServer {
+  private readonly server: Server;
+  private readonly client: BitbucketClient;
+  private readonly config: BitbucketConfig;
+  private readonly toolHandlers: Map<string, ToolHandler> = new Map();
+  private readonly toolDefinitions: ToolDefinition[] = [];
+  private readonly dangerousToolNames: Set<string> = new Set();
+
+  constructor(config: BitbucketConfig) {
+    this.config = config;
+    this.client = new BitbucketClient(config);
+
+    this.server = new Server(
+      {
+        name: "bitbucket-mcp-server",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.registerHandlers();
+    this.setupToolRouting();
+
+    this.server.onerror = (error) => logger.error("[MCP Error]", error);
+  }
+
+  /**
+   * Register all handler modules
+   */
+  private registerHandlers(): void {
+    for (const module of allModules) {
+      // Collect dangerous tool names
+      if (module.dangerousTools) {
+        for (const name of module.dangerousTools) {
+          this.dangerousToolNames.add(name);
+        }
+      }
+
+      // Filter tools based on dangerous flag
+      for (const tool of module.tools) {
+        const isDangerous = this.isDangerousTool(tool.name);
+        if (isDangerous && !this.config.allowDangerousCommands) {
+          logger.info(`Skipping dangerous tool: ${tool.name}`);
+          continue;
+        }
+        this.toolDefinitions.push(tool);
+      }
+
+      // Create handlers
+      const handlers = module.createHandlers(this.client);
+      for (const [name, handler] of Object.entries(handlers)) {
+        const isDangerous = this.isDangerousTool(name);
+        if (isDangerous && !this.config.allowDangerousCommands) {
+          continue;
+        }
+        this.toolHandlers.set(name, handler);
+      }
+    }
+
+    logger.info(`Registered ${this.toolDefinitions.length} tools`);
+  }
+
+  /**
+   * Check if a tool is considered dangerous
+   */
+  private isDangerousTool(name: string): boolean {
+    if (this.dangerousToolNames.has(name)) return true;
+    if (/^delete/i.test(name)) return true;
+    return false;
+  }
+
+  /**
+   * Setup MCP tool routing
+   */
+  private setupToolRouting(): void {
+    // List tools handler
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+      tools: this.toolDefinitions,
+    }));
+
+    // Call tool handler
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+
+      logger.info(`Tool called: ${name}`, { args });
+
+      const handler = this.toolHandlers.get(name);
+      if (!handler) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+
+      try {
+        return await handler(args ?? {});
+      } catch (error) {
+        logger.error("Tool execution error", { error, tool: name });
+        if (axios.isAxiosError(error)) {
+          throw new McpError(
+            ErrorCode.InternalError,
+            `Bitbucket API error: ${error.response?.data?.message ?? error.message}`
+          );
+        }
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Start the server with stdio transport
+   */
+  async run(): Promise<void> {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    logger.info("Bitbucket MCP server running on stdio");
+  }
+}
+
+/**
+ * Create and run server from environment config
+ */
+export async function main(): Promise<void> {
+  try {
+    const config = loadConfigFromEnv();
+    const server = new BitbucketMcpServer(config);
+    await server.run();
+  } catch (error) {
+    logger.error("Server startup error", { error });
+    process.exit(1);
+  }
+}

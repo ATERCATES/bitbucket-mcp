@@ -1,15 +1,15 @@
-import { jest } from "@jest/globals";
+import { vi, describe, it, expect } from "vitest";
 import type { AxiosInstance } from "axios";
 import { BitbucketPaginator, BITBUCKET_MAX_PAGELEN } from "../src/pagination.js";
 
 const createMockAxios = () => {
   return {
-    get: jest.fn(),
-  } as unknown as AxiosInstance & { get: jest.Mock };
+    get: vi.fn(),
+  } as unknown as AxiosInstance & { get: ReturnType<typeof vi.fn> };
 };
 
 const createMockLogger = () => ({
-  debug: jest.fn(),
+  debug: vi.fn(),
 }) as any;
 
 describe("BitbucketPaginator", () => {

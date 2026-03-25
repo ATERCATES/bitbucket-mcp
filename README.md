@@ -1,757 +1,330 @@
-# Bitbucket MCP
+# Bitbucket MCP Server
 
-A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and Server APIs. This MCP server enables AI assistants like Cursor to interact with your Bitbucket repositories, pull requests, and other resources.
+A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and Server APIs. This MCP server enables AI assistants like Claude and Cursor to interact with your Bitbucket repositories, pull requests, pipelines, and other resources.
 
-## Safety First
-
-This is a safe and responsible package — no DELETE operations are used, so there's no risk of data loss.
-Every pull request is analyzed with CodeQL to ensure the code remains secure.
-
-[![CodeQL](https://github.com/MatanYemini/bitbucket-mcp/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/MatanYemini/bitbucket-mcp/actions/workflows/github-code-scanning/codeql)
-[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/MatanYemini/bitbucket-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://badge.fury.io/js/bitbucket-mcp.svg)](https://www.npmjs.com/package/bitbucket-mcp)
 
-## Overview
+## Features
 
-Checkout out the [official npm package](https://www.npmjs.com/package/bitbucket-mcp)
-This server implements the Model Context Protocol standard to provide AI assistants with access to Bitbucket data and operations. It includes tools for:
+✨ **Comprehensive Bitbucket Integration** - 59 tools covering repositories, PRs, branches, commits, pipelines, and more
 
-- Listing and retrieving repositories
-- Getting repository details
-- Fetching pull requests
-- And more...
+🔒 **Secure Authentication** - Token-based or basic auth with granular permission control
 
-## Installation
+📝 **Well-Documented** - Complete API reference and architecture guides in `/docs`
 
--- Since it has been asked, in many cases we have seen - "BITBUCKET_USERNAME" is usually your email
+🧪 **Fully Tested** - Comprehensive unit test suite with 100% tool coverage
 
-### Using NPX (Recommended)
+⚡ **Modular Design** - Clean, maintainable architecture organized by feature domain
 
-The easiest way to use this MCP server is via NPX, which allows you to run it without installing it globally:
+🛡️ **Safety First** - Dangerous operations (deletes) require explicit enablement
 
-```bash
-# Option A (recommended): API URL + explicit workspace
-BITBUCKET_URL="https://api.bitbucket.org/2.0" \
-BITBUCKET_WORKSPACE="your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
-npx -y bitbucket-mcp@latest
+## Quick Start
 
-# Option B (legacy-compatible): web URL only; workspace is auto-extracted
-BITBUCKET_URL="https://bitbucket.org/your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
-npx -y bitbucket-mcp@latest
-```
-
-### Manual Installation
-
-Alternatively, you can install it globally or as part of your project:
+### Installation
 
 ```bash
-# Install globally
+# Option 1: Global install with NPM
 npm install -g bitbucket-mcp
 
-# Or install in your project
-npm install bitbucket-mcp
+# Option 2: Use with NPX (no installation required)
+npx -y bitbucket-mcp@latest
+
+# Option 3: Local development
+git clone <repository>
+cd bitbucket-mcp
+pnpm install
+pnpm build
+pnpm start
 ```
 
-Then run it with:
+### Configuration
+
+Set environment variables before running:
 
 ```bash
-# If installed globally (Option A)
-BITBUCKET_URL="https://api.bitbucket.org/2.0" \
-BITBUCKET_WORKSPACE="your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
+# Authentication (choose one method)
+export BITBUCKET_TOKEN="your_app_password"
+# OR
+export BITBUCKET_USERNAME="your_email@example.com"
+export BITBUCKET_PASSWORD="your_app_password"
+
+# Basic configuration
+export BITBUCKET_WORKSPACE="my-workspace"  # Optional: default workspace
+
+# Optional: Enable dangerous operations (delete branch, delete tag, etc.)
+export BITBUCKET_ALLOW_DANGEROUS=true
+```
+
+### Running the Server
+
+```bash
+# If installed globally
 bitbucket-mcp
 
-# If installed globally (Option B - legacy-compatible)
-BITBUCKET_URL="https://bitbucket.org/your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
-bitbucket-mcp
+# If using NPX
+npx -y bitbucket-mcp@latest
 
-# If installed in your project (Option A)
-BITBUCKET_URL="https://api.bitbucket.org/2.0" \
-BITBUCKET_WORKSPACE="your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
-npx bitbucket-mcp
-
-# If installed in your project (Option B - legacy-compatible)
-BITBUCKET_URL="https://bitbucket.org/your-workspace" \
-BITBUCKET_USERNAME="your-username" \
-BITBUCKET_PASSWORD="your-app-password" \
-npx bitbucket-mcp
+# If installed locally
+pnpm start
 ```
 
-## Configuration
+The server will start and listen for MCP protocol connections via stdio.
 
-### Environment Variables
+## Integration with MCP Clients
 
-Configure the server using the following environment variables:
+### Claude / Cursor Configuration
 
-| Variable                     | Description                                                                    | Required |
-| ---------------------------- | ------------------------------------------------------------------------------ | -------- |
-| `BITBUCKET_URL`              | Bitbucket API base URL. Defaults to `https://api.bitbucket.org/2.0`            | No       |
-| `BITBUCKET_USERNAME`         | Your Bitbucket username                                                        | Yes\*    |
-| `BITBUCKET_PASSWORD`         | Your Bitbucket app password                                                    | Yes\*    |
-| `BITBUCKET_TOKEN`            | Your Bitbucket access token (alternative to username/password)                 | No       |
-| `BITBUCKET_WORKSPACE`        | Default workspace to use. If omitted and `BITBUCKET_URL` contains it, auto-set | No       |
-| `BITBUCKET_ENABLE_DANGEROUS` | Set to `true` to enable dangerous tools (e.g., deletions). Default: disabled   | No       |
-| `BITBUCKET_LOG_DISABLE`      | Disable file logging when set to `true`/`1`                                    | No       |
-| `BITBUCKET_LOG_FILE`         | Absolute path to a specific log file                                           | No       |
-| `BITBUCKET_LOG_DIR`          | Directory to store logs (defaults to OS-specific app log dir)                  | No       |
-| `BITBUCKET_LOG_PER_CWD`      | When `true`, nest logs under a per-working-directory subfolder                 | No       |
-
-Either `BITBUCKET_TOKEN` or both `BITBUCKET_USERNAME` and `BITBUCKET_PASSWORD` must be provided.
-
-### Creating a Bitbucket App Password
-
-1. Log in to your Bitbucket account
-2. Go to Personal Settings > App Passwords
-3. Create a new app password with the following permissions:
-   - Repositories: Read
-   - Pull requests: Read, Write
-   - Pipelines: Read (required for pipeline operations)
-4. Copy the generated password and use it as the `BITBUCKET_PASSWORD` environment variable
-
-## Troubleshooting
-
-### 401 Authentication Errors
-
-If you're getting 401 authentication errors, check the following:
-
-1. **Verify your app password**: Make sure you're using an App Password, not your regular Bitbucket password
-1. **Verify app password permissions**: Your app password needs at least "Repositories: Read" permission
-1. **Try the API URL format**: If you're still getting 401 errors, try using the direct API URL format:
-
-```bash
-BITBUCKET_URL="https://api.bitbucket.org/2.0"
-```
-
-1. **Test API access**: Verify your credentials work by testing the Bitbucket API directly:
-
-```bash
-# Test with curl (replace with your actual values)
-curl -u "your-username:your-app-password" \
-  "https://api.bitbucket.org/2.0/repositories/your-workspace"
-```
-
-### Atlassian API Key 
-
-1. Put the Atlassian API Key in the `BITBUCKET_PASSWORD` variable, not `BITBUCKET_TOKEN`
-2. Use your Bitbucket email as `BITBUCKET_USERNAME` instead of your regular username
-
-For reference you can check the [API token documentation](https://support.atlassian.com/bitbucket-cloud/docs/using-api-tokens/)
-
-### Getting Help
-
-If you encounter issues:
-
-1. Check the [Bitbucket REST API documentation](https://developer.atlassian.com/cloud/bitbucket/rest/intro/) for API details
-2. Review the [Bitbucket Cloud documentation](https://support.atlassian.com/bitbucket-cloud/) for general help
-
-## Integration with Cursor
-
-To integrate this MCP server with Cursor:
-
-1. Open Cursor
-2. Go to Settings > Extensions
-3. Click on "Model Context Protocol"
-4. Add a new MCP configuration:
+Add to your MCP configuration (`.mcp.json` or similar):
 
 ```json
-"bitbucket": {
-  "command": "npx",
-  "env": {
-    "BITBUCKET_URL": "https://api.bitbucket.org/2.0",
-    "BITBUCKET_WORKSPACE": "your-workspace",
-    "BITBUCKET_USERNAME": "your-username",
-    "BITBUCKET_PASSWORD": "your-app-password"
-  },
-  "args": ["-y", "bitbucket-mcp@latest"]
+{
+  "mcpServers": {
+    "bitbucket": {
+      "command": "bitbucket-mcp",
+      "env": {
+        "BITBUCKET_TOKEN": "your_app_password",
+        "BITBUCKET_WORKSPACE": "my-workspace"
+      }
+    }
+  }
 }
 ```
 
-1. Save the configuration
-2. Use the "/bitbucket" command in Cursor to access Bitbucket repositories and pull requests
-
-### Using a Local Build with Cursor
-
-If you're developing locally and want to test your changes:
+Or with npx:
 
 ```json
-"bitbucket-local": {
-  "command": "node",
-  "env": {
-    "BITBUCKET_URL": "https://api.bitbucket.org/2.0",
-    "BITBUCKET_WORKSPACE": "your-workspace",
-    "BITBUCKET_USERNAME": "your-username",
-    "BITBUCKET_PASSWORD": "your-app-password"
-  },
-  "args": ["/path/to/your/local/bitbucket-mcp/dist/index.js"]
+{
+  "mcpServers": {
+    "bitbucket": {
+      "command": "npx",
+      "args": ["-y", "bitbucket-mcp@latest"],
+      "env": {
+        "BITBUCKET_TOKEN": "your_app_password",
+        "BITBUCKET_WORKSPACE": "my-workspace"
+      }
+    }
+  }
 }
 ```
 
 ## Available Tools
 
-This MCP server provides tools for interacting with Bitbucket repositories and pull requests. Below is a comprehensive list of the available operations:
+The server provides 59 tools organized into 11 categories:
 
-### Pagination
+| Category | Tools |
+|----------|-------|
+| **Repositories** | List, get, create repositories |
+| **Pull Requests** | Create, approve, merge, decline PRs |
+| **PR Comments** | Create, delete PR comments |
+| **PR Tasks** | Create, update, delete PR tasks (TODOs) |
+| **PR Content** | Get diffs and commits |
+| **Branches & Tags** | List, create, delete branches and tags |
+| **Commits** | List commits and commit details |
+| **Pipelines** | List, run, stop pipeline runs |
+| **Source Code** | Read file content from repositories |
+| **Users** | Get current user and workspace info |
+| **Branching Model** | Get branching strategy configuration |
 
-Unless noted otherwise, listing tools accept the following optional parameters:
+**Complete reference:** See [docs/TOOLS.md](docs/TOOLS.md)
 
-- `pagelen`: Number of items per page (Bitbucket `pagelen`). Defaults to 10 and is capped at 100.
-- `page`: 1-based Bitbucket page number to fetch. When omitted, the first page is returned.
-- `all`: When `true` (and `page` is not provided), the server automatically follows Bitbucket `next` links until all items are fetched or a safety cap of 1,000 entries is reached.
-- `limit`: Deprecated alias for `pagelen` kept for backward compatibility.
+## Environment Variables
 
-Use these knobs to page through large collections without hitting CLI truncation.
+### Authentication (Required - one method)
 
-### Repository Operations
+- `BITBUCKET_TOKEN` - App password (recommended)
+- OR `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD` - Basic authentication
 
-#### `listRepositories`
+### Configuration (Optional)
 
-Lists repositories in a workspace.
+- `BITBUCKET_URL` - API base URL (default: `https://api.bitbucket.org/2.0`)
+- `BITBUCKET_WORKSPACE` - Default workspace name
+- `BITBUCKET_ALLOW_DANGEROUS` - Enable delete operations (default: false)
 
-**Parameters:**
+### Logging (Optional)
 
-- `workspace` (optional): Bitbucket workspace name
-- `name` (optional): Filter repositories by partial name match
-- Pagination controls described in [Pagination](#pagination)
+- `BITBUCKET_LOG_DISABLE` - Disable file logging (default: false)
+- `BITBUCKET_LOG_FILE` - Custom log file path
+- `BITBUCKET_LOG_DIR` - Custom log directory
+- `BITBUCKET_LOG_PER_CWD` - Create per-directory logs (default: false)
 
-#### `getRepository`
+## Getting Credentials
 
-Gets details for a specific repository.
+### Create Bitbucket App Password
 
-**Parameters:**
+1. Go to https://bitbucket.org/account/settings/app-passwords/
+2. Click "Create app password"
+3. Give it a name (e.g., "MCP Server")
+4. Select permissions:
+   - Pipelines: Read
+   - Repositories: Read, Write
+   - Pull requests: Read, Write
+5. Copy the generated password
+6. Set `BITBUCKET_TOKEN` to this password
 
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
+### Find Your Workspace
 
-### Pull Request Operations
+The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{workspace}`
 
-#### `getPullRequests`
+## Documentation
 
-Gets pull requests for a repository.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `state` (optional): Pull request state (`OPEN`, `MERGED`, `DECLINED`, `SUPERSEDED`)
-- Pagination controls described in [Pagination](#pagination)
-
-#### `createPullRequest`
-
-Creates a new pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `title`: Pull request title
-- `description`: Pull request description
-- `sourceBranch`: Source branch name
-- `targetBranch`: Target branch name
-- `reviewers` (optional): List of reviewer usernames
-- `draft` (optional): Whether to create the pull request as a draft
-
-#### `getPullRequest`
-
-Gets details for a specific pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- Pagination controls described in [Pagination](#pagination)
-- Pagination controls described in [Pagination](#pagination)
-- Pagination controls described in [Pagination](#pagination)
-- Pagination controls described in [Pagination](#pagination)
-
-#### `updatePullRequest`
-
-Updates a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- Pagination controls described in [Pagination](#pagination)
-- Pagination controls described in [Pagination](#pagination)
-- Various optional update parameters (title, description, etc.)
-
-#### `getPullRequestActivity`
-
-Gets the activity log for a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `approvePullRequest`
-
-Approves a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `unapprovePullRequest`
-
-Removes an approval from a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `declinePullRequest`
-
-Declines a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `message` (optional): Reason for declining
-
-#### `mergePullRequest`
-
-Merges a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `message` (optional): Merge commit message
-- `strategy` (optional): Merge strategy (`merge-commit`, `squash`, `fast-forward`)
-
-#### `requestChanges`
-
-Requests changes on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `removeChangeRequest`
-
-Removes a change request from a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `createDraftPullRequest`
-
-Creates a new draft pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `title`: Pull request title
-- `description`: Pull request description
-- `sourceBranch`: Source branch name
-- `targetBranch`: Target branch name
-- `reviewers` (optional): List of reviewer usernames
-
-**Note:** This is equivalent to calling `createPullRequest` with `draft: true`.
-
-#### `publishDraftPullRequest`
-
-Publishes a draft pull request to make it ready for review.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `convertTodraft`
-
-Converts a regular pull request to draft status.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-### Pull Request Comment Operations
-
-#### `getPullRequestComments`
-
-Lists comments on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `addPullRequestComment`
-
-Creates a comment on a pull request (general or inline).
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `content`: Comment content in markdown format
-- `inline` (optional): Inline comment information for commenting on specific lines
-
-**Inline Comment Format:**
-
-The `inline` parameter allows you to create comments on specific lines of code in the pull request diff:
-
-```json
-{
-  "path": "src/file.ts",
-  "to": 15, // Line number in NEW version (for added/modified lines)
-  "from": 10 // Line number in OLD version (for deleted/modified lines)
-}
-```
-
-**Examples:**
-
-- **General comment**: Omit the `inline` parameter for a general pull request comment
-- **Comment on new line**: Use only `to` parameter
-- **Comment on deleted line**: Use only `from` parameter
-- **Comment on modified line**: Use both `from` and `to` parameters
-
-**Usage:**
-
-```javascript
-// General comment
-addPullRequestComment(workspace, repo, pr_id, "Great work!");
-
-// Inline comment on new line 25
-addPullRequestComment(workspace, repo, pr_id, "Consider error handling here", {
-  path: "src/service.ts",
-  to: 25,
-});
-```
-
-#### `getPullRequestComment`
-
-Gets a specific comment on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `comment_id`: Comment ID
-
-#### `updatePullRequestComment`
-
-Updates a comment on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `comment_id`: Comment ID
-- `content`: Updated comment content
-
-#### `deletePullRequestComment`
-
-Deletes a comment on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `comment_id`: Comment ID
-
-#### `resolveComment`
-
-Resolves a comment thread on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `comment_id`: Comment ID
-
-#### `reopenComment`
-
-Reopens a resolved comment thread on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `comment_id`: Comment ID
-
-### Pull Request Diff Operations
-
-#### `getPullRequestDiff`
-
-Gets the diff for a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `getPullRequestDiffStat`
-
-Gets the diff statistics for a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `getPullRequestPatch`
-
-Gets the patch for a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-### Pull Request Task Operations
-
-#### `getPullRequestTasks`
-
-Lists tasks on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `createPullRequestTask`
-
-Creates a task on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `content`: Task content
-- `comment` (optional): Comment ID to associate with the task
-- `pending` (optional): Whether the task is pending
-
-#### `getPullRequestTask`
-
-Gets a specific task on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `task_id`: Task ID
-
-#### `updatePullRequestTask`
-
-Updates a task on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `task_id`: Task ID
-- `content` (optional): Updated task content
-- `state` (optional): Updated task state
-
-#### `deletePullRequestTask`
-
-Deletes a task on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-- `task_id`: Task ID
-
-### Other Pull Request Operations
-
-#### `getPullRequestCommits`
-
-Lists commits on a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-#### `getPullRequestStatuses`
-
-Lists commit statuses for a pull request.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pull_request_id`: Pull request ID
-
-### Pipeline Operations
-
-#### `listPipelineRuns`
-
-Lists pipeline runs for a repository.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- Pagination controls described in [Pagination](#pagination)
-- `status` (optional): Filter pipelines by status (`PENDING`, `IN_PROGRESS`, `SUCCESSFUL`, `FAILED`, `ERROR`, `STOPPED`)
-- `target_branch` (optional): Filter pipelines by target branch
-- `trigger_type` (optional): Filter pipelines by trigger type (`manual`, `push`, `pullrequest`, `schedule`)
-
-#### `getPipelineRun`
-
-Gets details for a specific pipeline run.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pipeline_uuid`: Pipeline UUID
-- Pagination controls described in [Pagination](#pagination)
-
-#### `runPipeline`
-
-Triggers a new pipeline run.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `target`: Pipeline target configuration (object with `ref_type`, `ref_name`, and optional `commit_hash`, `selector_type`, `selector_pattern`)
-- `variables` (optional): Array of pipeline variables (objects with `key`, `value`, and optional `secured` fields)
-
-#### `stopPipeline`
-
-Stops a running pipeline.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pipeline_uuid`: Pipeline UUID
-
-#### `getPipelineSteps`
-
-Lists steps for a pipeline run.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pipeline_uuid`: Pipeline UUID
-
-#### `getPipelineStep`
-
-Gets details for a specific pipeline step.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pipeline_uuid`: Pipeline UUID
-- `step_uuid`: Step UUID
-
-#### `getPipelineStepLogs`
-
-Gets logs for a specific pipeline step.
-
-**Parameters:**
-
-- `workspace`: Bitbucket workspace name
-- `repo_slug`: Repository slug
-- `pipeline_uuid`: Pipeline UUID
-- `step_uuid`: Step UUID
+- **[Getting Started Guide](docs/guides/GETTING_STARTED.md)** - Installation, configuration, and basic usage
+- **[Tools Reference](docs/TOOLS.md)** - Complete API documentation for all 59 tools
+- **[Architecture Guide](docs/architecture/ARCHITECTURE.md)** - Technical design and extension guide
+- **[Main Documentation](docs/README.md)** - Overview and quick links
 
 ## Development
 
 ### Prerequisites
 
-- Node.js 18 or higher
-- npm or yarn
+- Node.js 18+
+- pnpm (or npm)
 
 ### Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/MatanYemini/bitbucket-mcp.git
+git clone <repository>
 cd bitbucket-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run in development mode
-npm run dev
+pnpm install
 ```
 
-## Publishing to the MCP Registry
+### Build
 
-Use the official Model Context Protocol publishing guide when you are ready to make a new server release. The repository includes
-everything that guide expects:
+```bash
+pnpm build          # Compile TypeScript
+pnpm lint           # Run ESLint
+pnpm format         # Format with Prettier
+```
 
-1. Build the project so `dist/index.js` is up to date:
-   ```bash
-   npm run build
-   ```
-2. Generate the registry manifest (this reads `package.json` and emits `registry/bitbucket-mcp.manifest.json`):
-   ```bash
-   npm run registry:manifest
-   ```
-3. Follow the [publish-server guide](https://github.com/modelcontextprotocol/registry/blob/main/docs/guides/publishing/publish-server.md)
-   to push the manifest with `smithery publish` or the recommended workflow from the guide.
+### Testing
 
-The generated manifest captures the CLI command (`node dist/index.js`), all documented configuration options, and pointers back to
-this README for setup instructions, so it can be submitted directly to the MCP registry.
+```bash
+pnpm test           # Run test suite
+pnpm test:watch     # Watch mode
+```
+
+### Running in Development
+
+```bash
+pnpm dev            # Run with tsx (no build required)
+# OR
+pnpm build && pnpm start
+```
+
+## Project Structure
+
+```
+src/
+├─ index.ts              # Entry point
+├─ server.ts             # MCP server orchestration
+├─ client.ts             # Bitbucket API client
+├─ config.ts             # Configuration management
+├─ logger.ts             # File-based logging
+├─ types.ts              # TypeScript definitions
+├─ schemas.ts            # JSON schemas
+├─ utils.ts              # Utilities
+├─ pagination.ts         # Pagination helper
+└─ handlers/             # Feature modules
+   ├─ repositories.ts
+   ├─ pull-requests.ts
+   ├─ pr-comments.ts
+   ├─ pr-tasks.ts
+   ├─ pr-content.ts
+   ├─ refs.ts
+   ├─ commits.ts
+   ├─ pipelines.ts
+   ├─ source.ts
+   ├─ users.ts
+   ├─ branching-model.ts
+   └─ index.ts
+
+docs/
+├─ README.md             # Documentation overview
+├─ TOOLS.md              # Tools reference
+├─ guides/
+│  └─ GETTING_STARTED.md # Setup guide
+└─ architecture/
+   └─ ARCHITECTURE.md    # Technical design
+
+__tests__/
+├─ test-utils.ts         # Test helpers
+└─ handlers/             # Handler tests
+```
+
+## Architecture
+
+The server uses a modular handler-based architecture:
+
+```
+MCP Client → Server → Handler Modules → BitbucketClient → Bitbucket API
+```
+
+Each handler module:
+- Defines tools (names, schemas, descriptions)
+- Implements handlers (async functions)
+- Can mark tools as dangerous
+- Is automatically registered by the server
+
+See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for details.
+
+## Dangerous Operations
+
+Some tools that perform destructive operations are marked as dangerous:
+
+- `deletePullRequestComment`
+- `deletePullRequestTask`
+- `deleteBranch`
+- `deleteTag`
+
+These require `BITBUCKET_ALLOW_DANGEROUS=true` to use, preventing accidental data loss.
+
+## Troubleshooting
+
+### Authentication Issues
+
+```bash
+# Test your credentials
+curl -X GET https://api.bitbucket.org/2.0/user \
+  -u your_username:your_app_password
+```
+
+### View Logs
+
+**macOS:**
+```bash
+tail -f ~/Library/Logs/bitbucket-mcp/bitbucket.log
+```
+
+**Linux:**
+```bash
+tail -f ~/.local/state/bitbucket-mcp/bitbucket.log
+```
+
+**Windows:**
+```bash
+Get-Content -Path "$env:LOCALAPPDATA\bitbucket-mcp\bitbucket.log" -Tail 50 -Wait
+```
+
+### Self-Hosted Bitbucket
+
+For self-hosted Bitbucket Server, set the API URL:
+
+```bash
+BITBUCKET_URL=https://bitbucket.mycompany.com/rest/api/2.0 bitbucket-mcp
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE) file for details.
 
-## Links
+## Support
 
-- [GitHub Repository](https://github.com/MatanYemini/bitbucket-mcp)
-- [npm Package](https://www.npmjs.com/package/bitbucket-mcp)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Bitbucket REST API Documentation](https://developer.atlassian.com/cloud/bitbucket/rest/intro/)
-- [Bitbucket Cloud Documentation](https://support.atlassian.com/bitbucket-cloud/)
+- 📖 See [docs/guides/GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) for setup help
+- 🔧 Check [docs/TOOLS.md](docs/TOOLS.md) for tool documentation
+- 🏗️ Review [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for technical details
+- 🐛 Enable logging with `BITBUCKET_LOG_DISABLE=false` for debugging
+
+---
+
+**Version:** 5.0.6  
+**Last Updated:** 2024

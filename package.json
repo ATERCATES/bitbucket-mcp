@@ -2,7 +2,7 @@
   "name": "bitbucket-mcp",
   "version": "5.0.6",
   "description": "Model Context Protocol (MCP) server for Bitbucket Cloud and Server API integration",
-  "mcpName": "io.github.MatanYemini/bitbucket-mcp",
+  "mcpName": "io.github.bitbucket-mcp/bitbucket-mcp",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -11,22 +11,27 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs"
   ],
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm build",
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
-    "publish:patch": "npm version patch && npm publish",
-    "publish:minor": "npm version minor && npm publish",
-    "publish:major": "npm version major && npm publish",
-    "release": "npm run publish:patch",
-    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "lint": "eslint src/**/*.ts",
-    "inspector": "npx @modelcontextprotocol/inspector dist/index.js",
+    "publish:patch": "pnpm version patch && pnpm publish",
+    "publish:minor": "pnpm version minor && pnpm publish",
+    "publish:major": "pnpm version major && pnpm publish",
+    "release": "pnpm publish:patch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector dist/index.js",
     "registry:manifest": "node scripts/generate-registry-manifest.cjs",
     "registry:validate": "node scripts/validate-server-json.mjs"
   },
@@ -43,30 +48,32 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MatanYemini/bitbucket-mcp"
+    "url": "git+https://github.com/your-org/bitbucket-mcp"
   },
-  "homepage": "https://github.com/MatanYemini/bitbucket-mcp#readme",
+  "homepage": "https://github.com/your-org/bitbucket-mcp#readme",
   "bugs": {
-    "url": "https://github.com/MatanYemini/bitbucket-mcp/issues"
+    "url": "https://github.com/your-org/bitbucket-mcp/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.1.1",
-    "axios": "^1.6.5",
-    "winston": "^3.11.0"
+    "@modelcontextprotocol/sdk": "1.27.1",
+    "axios": "^1.13.6",
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
-    "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.11",
-    "@types/node": "^20.11.24",
-    "@typescript-eslint/eslint-plugin": "^7.0.2",
-    "@typescript-eslint/parser": "^7.0.2",
-    "eslint": "^8.56.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "tsx": "^4.7.1",
-    "typescript": "^5.3.3"
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.1"
   },
   "engines": {
     "node": ">=18"

@@ -9,7 +9,7 @@ export interface PaginationRequestOptions {
   pagelen?: number;
   page?: number;
   all?: boolean;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   defaultPagelen?: number;
   maxItems?: number;
   description?: string;
@@ -27,7 +27,7 @@ export interface PaginatedValuesResult<T> {
 
 interface PendingRequestConfig {
   url: string;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
 }
 
 export class BitbucketPaginator {
@@ -50,10 +50,8 @@ export class BitbucketPaginator {
       description,
     } = options;
 
-    const resolvedPagelen = this.normalizePagelen(
-      pagelen ?? defaultPagelen
-    );
-    const requestParams: Record<string, any> = {
+    const resolvedPagelen = this.normalizePagelen(pagelen ?? defaultPagelen);
+    const requestParams: Record<string, unknown> = {
       ...params,
       pagelen: resolvedPagelen,
     };
@@ -68,10 +66,7 @@ export class BitbucketPaginator {
     };
 
     if (!shouldFetchAll) {
-      const response = await this.performRequest(
-        requestDescriptor,
-        description
-      );
+      const response = await this.performRequest(requestDescriptor, description);
       const values = this.extractValues<T>(response.data);
       return {
         values,
@@ -111,7 +106,6 @@ export class BitbucketPaginator {
       aggregated.push(...values);
 
       if (!response.data?.next) {
-        nextRequest = undefined;
         break;
       }
 
@@ -120,7 +114,6 @@ export class BitbucketPaginator {
           description: description ?? path,
           maxItems,
         });
-        nextRequest = undefined;
         break;
       }
 
@@ -151,7 +144,7 @@ export class BitbucketPaginator {
   private async performRequest(
     request: PendingRequestConfig,
     description?: string,
-    extra?: Record<string, any>
+    extra?: Record<string, unknown>
   ) {
     this.logger.debug("Calling Bitbucket API", {
       description: description ?? request.url,
@@ -163,9 +156,10 @@ export class BitbucketPaginator {
     return this.api.get(request.url, config);
   }
 
-  private extractValues<T>(data: any): T[] {
-    if (Array.isArray(data?.values)) {
-      return data.values as T[];
+  private extractValues<T>(data: unknown): T[] {
+    const d = data as { values?: T[] };
+    if (Array.isArray(d?.values)) {
+      return d.values;
     }
     if (Array.isArray(data)) {
       return data as T[];

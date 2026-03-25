@@ -1,10 +1,10 @@
 {
   "name": "Bitbucket MCP",
   "slug": "bitbucket-mcp",
-  "version": "5.0.2",
+  "version": "5.0.6",
   "description": "Model Context Protocol (MCP) server for Bitbucket Cloud and Server API integration",
-  "homepage": "https://github.com/MatanYemini/bitbucket-mcp#readme",
-  "repository": "https://github.com/MatanYemini/bitbucket-mcp",
+  "homepage": "https://github.com/your-org/bitbucket-mcp#readme",
+  "repository": "https://github.com/your-org/bitbucket-mcp",
   "license": "MIT",
   "author": "Bitbucket MCP Team",
   "keywords": [
