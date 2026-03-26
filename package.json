@@ -32,7 +32,7 @@
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "inspector": "pnpm dlx @modelcontextprotocol/inspector dist/index.js"
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector node -r dotenv/config dist/index.js"
   },
   "keywords": [
     "bitbucket",
@@ -63,6 +63,7 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
+    "dotenv": "^17.3.1",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
