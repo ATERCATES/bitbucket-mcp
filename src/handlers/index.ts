@@ -10,6 +10,7 @@ import { usersModule } from "./users.js";
 import { refsModule } from "./refs.js";
 import { commitsModule } from "./commits.js";
 import { sourceModule } from "./source.js";
+import { genericModule } from "./generic.js";
 
 /**
  * All handler modules aggregated for registration
@@ -26,6 +27,7 @@ export const allModules: HandlerModule[] = [
   refsModule,
   commitsModule,
   sourceModule,
+  genericModule,
 ];
 
 export {
@@ -40,4 +42,5 @@ export {
   refsModule,
   commitsModule,
   sourceModule,
+  genericModule,
 };
