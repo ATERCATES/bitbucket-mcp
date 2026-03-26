@@ -21,15 +21,15 @@ export class BitbucketClient {
     this.config = config;
 
     // Validate required credentials for Personal API Token
-    this.validateAuth(config);
+    const credentials = this.validateAuth(config);
 
     const auth = {
-      username: config.username!,
-      password: config.token!,
+      username: credentials.username,
+      password: credentials.token,
     };
 
     logger.info("Bitbucket Client initialized with Personal API Token", {
-      username: config.username,
+      username: credentials.username,
       baseUrl: config.baseUrl,
     });
 
@@ -44,12 +44,12 @@ export class BitbucketClient {
   /**
    * Validates that required credentials are provided and strictly enforces ATBB tokens.
    */
-  private validateAuth(config: BitbucketConfig): void {
+  private validateAuth(config: BitbucketConfig): { username: string; token: string } {
     // Check if username is provided
     if (!config.username) {
       throw new Error(
         "BITBUCKET_USERNAME is required.\n" +
-        "Set your Atlassian email address.\n" +
+        "Set your Atlassian email address (for API Tokens) or Bitbucket username (for App Passwords).\n" +
         "Example: export BITBUCKET_USERNAME=\"user@example.com\""
       );
     }
@@ -62,23 +62,16 @@ export class BitbucketClient {
       );
     }
 
-    // Strict validation: Must start with ATBB or ATATT
-    if (!config.token.startsWith("ATBB") && !config.token.startsWith("ATATT")) {
-      throw new Error(
-        "Invalid token format. Only Personal API Tokens starting with 'ATBB' or 'ATATT' are supported.\n" +
-        "Please create a new API Token at https://bitbucket.org/account/settings/app-passwords/ (select 'Create API token')\n" +
-        "App Passwords and Access Tokens (BBAT) are not supported.\n" +
-        `Current token prefix: ${config.token.substring(0, 4)}...`
-      );
-    }
-
-    // Warn if username doesn't look like an email
-    if (!config.username.includes("@")) {
+    // Warn if username looks like email but token doesn't look like ATBB/ATATT (might be App Password)
+    // or if username is not email but token is ATBB (mismatch)
+    if (config.token.startsWith("ATBB") && !config.username.includes("@")) {
       logger.warn(
         "Warning: Personal API Tokens (ATBB) usually require your Atlassian email address as the username.\n" +
         `Current username: "${config.username}"`
       );
     }
+
+    return { username: config.username, token: config.token };
   }
 
   /**
