@@ -43,13 +43,22 @@ export function normalizeBitbucketConfig(rawConfig: BitbucketConfig): BitbucketC
 /**
  * Load Bitbucket configuration from environment variables.
  * Reads all relevant BITBUCKET_* env vars and returns a normalized config.
+ * 
+ * REQUIRED ENVIRONMENT VARIABLES:
+ * - BITBUCKET_USERNAME: Your Atlassian email address
+ * - BITBUCKET_API_TOKEN: Personal API Token (must start with ATBB- or ATATT-)
+ * 
+ * OPTIONAL:
+ * - BITBUCKET_WORKSPACE: Default workspace name
+ * - BITBUCKET_URL: API base URL (default: https://api.bitbucket.org/2.0)
+ * - BITBUCKET_ALLOW_DANGEROUS: Enable delete operations (default: false)
  */
 export function loadConfigFromEnv(): BitbucketConfig {
   const initialConfig: BitbucketConfig = {
     baseUrl: process.env.BITBUCKET_URL || "https://api.bitbucket.org/2.0",
-    token: process.env.BITBUCKET_TOKEN,
+    token: process.env.BITBUCKET_API_TOKEN, // Strictly enforce API_TOKEN
     username: process.env.BITBUCKET_USERNAME,
-    password: process.env.BITBUCKET_PASSWORD,
+    // password field is deliberately omitted to enforce API Token usage
     defaultWorkspace: process.env.BITBUCKET_WORKSPACE,
     allowDangerousCommands:
       isTruthyEnv(process.env.BITBUCKET_ENABLE_DANGEROUS) ||

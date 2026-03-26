@@ -124,9 +124,9 @@ Centralized environment variable management:
 
 **Environment Variables:**
 - `BITBUCKET_URL`: API base URL (default: https://api.bitbucket.org/2.0)
-- `BITBUCKET_TOKEN`: Authentication token
-- `BITBUCKET_USERNAME`: For basic auth
-- `BITBUCKET_PASSWORD`: For basic auth
+- `BITBUCKET_API_TOKEN`: Workspace/Repository Access Token (Bearer Auth) or API Token (Basic Auth) (Recommended)
+- `BITBUCKET_USERNAME`: For Legacy App Password / Basic Auth
+- `BITBUCKET_PASSWORD`: For Legacy App Password / Basic Auth
 - `BITBUCKET_WORKSPACE`: Default workspace
 - `BITBUCKET_ALLOW_DANGEROUS`: Enable dangerous operations
 - `BITBUCKET_LOG_*`: Logging configuration
@@ -219,9 +219,10 @@ if (isDangerous && !isDangerousAllowed) {
 
 ### Authentication
 
-Two supported methods (checked in order):
-1. **Token Auth**: `BITBUCKET_TOKEN` (preferred)
-2. **Basic Auth**: `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD`
+Supported methods (checked in order):
+1. **API/Access Token**: `BITBUCKET_API_TOKEN` (Uses Bearer Auth by default, or Basic Auth if `BITBUCKET_USERNAME` is provided)
+2. **App Password**: `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD` (Basic Auth, Legacy)
+3. **OAuth**: `BITBUCKET_TOKEN` (Bearer token)
 
 Both are passed to Axios as Authorization headers.
 

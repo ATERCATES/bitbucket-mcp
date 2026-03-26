@@ -42,21 +42,31 @@ pnpm start
 
 ### Configuration
 
-Set environment variables before running:
+**REQUIRED Environment Variables:**
 
 ```bash
-# Authentication (choose one method)
-export BITBUCKET_TOKEN="your_app_password"
-# OR
-export BITBUCKET_USERNAME="your_email@example.com"
-export BITBUCKET_PASSWORD="your_app_password"
+# Authentication (Personal API Token ONLY)
+export BITBUCKET_USERNAME="user@example.com"    # Your Atlassian email address
+export BITBUCKET_API_TOKEN="ATBBxxxxxxxxxxxxx"  # Personal API Token (starts with ATBB or ATATT)
 
-# Basic configuration
-export BITBUCKET_WORKSPACE="my-workspace"  # Optional: default workspace
-
-# Optional: Enable dangerous operations (delete branch, delete tag, etc.)
-export BITBUCKET_ALLOW_DANGEROUS=true
+# Default Workspace (optional but recommended)
+export BITBUCKET_WORKSPACE="my-workspace"       # Your default workspace name
 ```
+
+**Optional Configuration:**
+
+```bash
+# Enable dangerous operations (delete branch, delete tag, etc.)
+export BITBUCKET_ALLOW_DANGEROUS=true
+
+# Custom API URL (for self-hosted Bitbucket Server)
+export BITBUCKET_URL="https://bitbucket.company.com/rest/api/2.0"
+```
+
+**⚠️ Authentication Notes:**
+- This MCP server strictly enforces **Personal API Tokens** (starting with `ATBB` or `ATATT`)
+- App Passwords and Access Tokens (BBAT-xxx) are **NOT supported**
+- `BITBUCKET_USERNAME` must be your Atlassian email address
 
 ### Running the Server
 
@@ -85,7 +95,8 @@ Add to your MCP configuration (`.mcp.json` or similar):
     "bitbucket": {
       "command": "bitbucket-mcp",
       "env": {
-        "BITBUCKET_TOKEN": "your_app_password",
+        "BITBUCKET_USERNAME": "user@example.com",
+        "BITBUCKET_API_TOKEN": "ATBBxxxxxxxxxxxxx",
         "BITBUCKET_WORKSPACE": "my-workspace"
       }
     }
@@ -102,7 +113,8 @@ Or with npx:
       "command": "npx",
       "args": ["-y", "@atercates/bitbucket-mcp@latest"],
       "env": {
-        "BITBUCKET_TOKEN": "your_app_password",
+        "BITBUCKET_USERNAME": "user@example.com",
+        "BITBUCKET_API_TOKEN": "ATBBxxxxxxxxxxxxx",
         "BITBUCKET_WORKSPACE": "my-workspace"
       }
     }
@@ -132,41 +144,30 @@ The server provides 59 tools organized into 11 categories:
 
 ## Environment Variables
 
-### Authentication (Required - one method)
+### Authentication (Required)
 
-- `BITBUCKET_TOKEN` - App password (recommended)
-- OR `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD` - Basic authentication
+- `BITBUCKET_USERNAME` - Your Atlassian email address (e.g., `user@example.com`)
+- `BITBUCKET_API_TOKEN` - Personal API Token starting with `ATBB-` or `ATATT-`
+
+**How to create:**
+1. Go to https://bitbucket.org/account/settings/app-passwords/
+2. Click "Create API token"
+3. Select permissions: Repositories (Read, Write), Pull requests (Read, Write), Pipelines (Read)
+4. Copy the generated token
+5. Set expiration date (max 1 year)
 
 ### Configuration (Optional)
 
+- `BITBUCKET_WORKSPACE` - Default workspace name (can be provided per-tool call)
 - `BITBUCKET_URL` - API base URL (default: `https://api.bitbucket.org/2.0`)
-- `BITBUCKET_WORKSPACE` - Default workspace name
-- `BITBUCKET_ALLOW_DANGEROUS` - Enable delete operations (default: false)
+- `BITBUCKET_ALLOW_DANGEROUS` - Enable delete operations (default: `false`)
 
 ### Logging (Optional)
 
-- `BITBUCKET_LOG_DISABLE` - Disable file logging (default: false)
+- `BITBUCKET_LOG_DISABLE` - Disable file logging (default: `false`)
 - `BITBUCKET_LOG_FILE` - Custom log file path
 - `BITBUCKET_LOG_DIR` - Custom log directory
-- `BITBUCKET_LOG_PER_CWD` - Create per-directory logs (default: false)
-
-## Getting Credentials
-
-### Create Bitbucket App Password
-
-1. Go to https://bitbucket.org/account/settings/app-passwords/
-2. Click "Create app password"
-3. Give it a name (e.g., "MCP Server")
-4. Select permissions:
-   - Pipelines: Read
-   - Repositories: Read, Write
-   - Pull requests: Read, Write
-5. Copy the generated password
-6. Set `BITBUCKET_TOKEN` to this password
-
-### Find Your Workspace
-
-The workspace name is visible in your Bitbucket URL: `https://bitbucket.org/{workspace}`
+- `BITBUCKET_LOG_PER_CWD` - Create per-directory logs (default: `false`)
 
 ## Documentation
 
@@ -286,11 +287,30 @@ These require `BITBUCKET_ALLOW_DANGEROUS=true` to use, preventing accidental dat
 
 ### Authentication Issues
 
+**Test your credentials:**
 ```bash
-# Test your credentials
-curl -X GET https://api.bitbucket.org/2.0/user \
-  -u your_username:your_app_password
+# Test Personal API Token
+curl -u "user@example.com:ATBBxxxxxx" \
+  https://api.bitbucket.org/2.0/user
+
+# Should return your user info if credentials are valid
 ```
+
+**Common errors:**
+
+1. **"BITBUCKET_USERNAME is required"**
+   - Set `BITBUCKET_USERNAME` to your Atlassian email address.
+
+2. **"BITBUCKET_API_TOKEN is required"**
+   - Set `BITBUCKET_API_TOKEN` to your Personal API Token (starts with ATBB).
+
+3. **"Invalid token format"**
+   - The token must start with `ATBB`. App passwords and Access Tokens are not supported.
+
+4. **"401 Unauthorized"**
+   - Check username/token are correct
+   - Verify token hasn't expired (max 1 year)
+   - Ensure you are using your **email address** as username
 
 ### View Logs
 

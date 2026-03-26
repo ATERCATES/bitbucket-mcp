@@ -92,7 +92,7 @@ src/
 
 ### Environment Configuration
 - `BITBUCKET_URL`: API base URL (defaults to https://api.bitbucket.org/2.0)
-- `BITBUCKET_TOKEN` OR `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD`: Authentication
+- `BITBUCKET_API_TOKEN` (API Token, Recommended) OR `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD` (Legacy App Password): Authentication. Note that API Tokens use Basic Auth with either the provided username or a static `x-bitbucket-api-token-auth` user.
 - `BITBUCKET_WORKSPACE`: Default workspace (auto-extracted from URL if not provided)
 - `BITBUCKET_ALLOW_DANGEROUS`: Enable destructive operations (disabled by default)
 - `BITBUCKET_LOG_*`: Logging configuration (file, directory, disable, per-CWD)
