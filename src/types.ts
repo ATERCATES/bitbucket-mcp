@@ -204,6 +204,14 @@ export interface BitbucketProjectBranchingModel {
 }
 
 /**
+ * Server operation mode
+ * - readonly: Only GET operations
+ * - safe: GET + POST/PUT (no deletes) [DEFAULT]
+ * - full: All operations including dangerous deletes
+ */
+export type BitbucketMode = "readonly" | "safe" | "full";
+
+/**
  * Represents the configuration for a Bitbucket client
  */
 export interface BitbucketConfig {
@@ -212,7 +220,9 @@ export interface BitbucketConfig {
   username?: string;
   password?: string;
   defaultWorkspace?: string;
-  allowDangerousCommands?: boolean;
+  mode?: BitbucketMode;
+  enabledTools?: string[];
+  disabledTools?: string[];
 }
 
 /**

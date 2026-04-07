@@ -48,7 +48,7 @@ export class BitbucketMcpServer {
   }
 
   /**
-   * Register all handler modules
+   * Register all handler modules with filtering based on mode and tool lists
    */
   private registerHandlers(): void {
     for (const module of allModules) {
@@ -59,11 +59,10 @@ export class BitbucketMcpServer {
         }
       }
 
-      // Filter tools based on dangerous flag
+      // Filter tools based on mode, dangerous flag, and enabled/disabled lists
       for (const tool of module.tools) {
-        const isDangerous = this.isDangerousTool(tool.name);
-        if (isDangerous && !this.config.allowDangerousCommands) {
-          logger.info(`Skipping dangerous tool: ${tool.name}`);
+        if (!this.shouldEnableTool(tool.name)) {
+          logger.info(`Skipping tool: ${tool.name} (filtered by config)`);
           continue;
         }
         this.toolDefinitions.push(tool);
@@ -72,15 +71,77 @@ export class BitbucketMcpServer {
       // Create handlers
       const handlers = module.createHandlers(this.client);
       for (const [name, handler] of Object.entries(handlers)) {
-        const isDangerous = this.isDangerousTool(name);
-        if (isDangerous && !this.config.allowDangerousCommands) {
+        if (!this.shouldEnableTool(name)) {
           continue;
         }
         this.toolHandlers.set(name, handler);
       }
     }
 
-    logger.info(`Registered ${this.toolDefinitions.length} tools`);
+    logger.info(`Registered ${this.toolDefinitions.length} tools (mode: ${this.config.mode || 'safe'})`);
+  }
+
+  /**
+   * Determine if a tool should be enabled based on mode and configuration
+   */
+  private shouldEnableTool(toolName: string): boolean {
+    const { mode = "safe", enabledTools, disabledTools } = this.config;
+    
+    // If enabledTools is specified, ONLY enable those tools (whitelist mode)
+    if (enabledTools && enabledTools.length > 0) {
+      return enabledTools.includes(toolName);
+    }
+    
+    // If disabledTools is specified, disable those tools (blacklist mode)
+    if (disabledTools && disabledTools.includes(toolName)) {
+      return false;
+    }
+    
+    const isDangerous = this.isDangerousTool(toolName);
+    const isWriteOperation = this.isWriteOperation(toolName);
+    
+    // Filter based on mode
+    switch (mode) {
+      case "readonly":
+        // Only allow GET operations (no create, update, delete, merge, approve, etc.)
+        return !isWriteOperation;
+        
+      case "safe":
+        // Allow GET + POST/PUT, but no dangerous operations
+        return !isDangerous;
+        
+      case "full":
+        // Allow everything
+        return true;
+        
+      default:
+        return !isDangerous; // fallback to safe mode
+    }
+  }
+  
+  /**
+   * Check if a tool is a write operation (POST/PUT/DELETE)
+   */
+  private isWriteOperation(name: string): boolean {
+    // Delete operations
+    if (/^delete/i.test(name)) return true;
+    
+    // Create operations (POST)
+    if (/^create/i.test(name)) return true;
+    
+    // Update operations (PUT)
+    if (/^update/i.test(name)) return true;
+    
+    // Approval/decline operations
+    if (/^(approve|unapprove|decline|merge)/i.test(name)) return true;
+    
+    // Run/trigger operations
+    if (/^(run|trigger|stop)/i.test(name)) return true;
+    
+    // Any operation that modifies state
+    if (/^(add|remove|set)/i.test(name)) return true;
+    
+    return false;
   }
 
   /**

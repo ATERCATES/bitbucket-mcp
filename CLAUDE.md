@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Model Context Protocol (MCP) server that provides AI assistants with programmatic access to Bitbucket Cloud and Server APIs. It's published as an npm package (`@atercates/bitbucket-mcp`) and enables operations on repositories, pull requests, pipelines, and more through a standardized MCP interface.
 
-**Safety First**: Dangerous operations (deletes) require explicit `BITBUCKET_ALLOW_DANGEROUS=true`. Every PR is analyzed with CodeQL for security.
+**Safety First**: Dangerous operations (deletes) require `BITBUCKET_MODE=full`. Every PR is analyzed with CodeQL for security.
 
 ## Development Commands
 
@@ -94,7 +94,9 @@ src/
 - `BITBUCKET_URL`: API base URL (defaults to https://api.bitbucket.org/2.0)
 - `BITBUCKET_API_TOKEN` (API Token, Recommended) OR `BITBUCKET_USERNAME` + `BITBUCKET_PASSWORD` (Legacy App Password): Authentication. Note that API Tokens use Basic Auth with either the provided username or a static `x-bitbucket-api-token-auth` user.
 - `BITBUCKET_WORKSPACE`: Default workspace (auto-extracted from URL if not provided)
-- `BITBUCKET_ALLOW_DANGEROUS`: Enable destructive operations (disabled by default)
+- `BITBUCKET_MODE`: Operation mode - readonly, safe (default), or full
+- `BITBUCKET_ENABLED_TOOLS`: Comma-separated list of tools to enable
+- `BITBUCKET_DISABLED_TOOLS`: Comma-separated list of tools to disable
 - `BITBUCKET_LOG_*`: Logging configuration (file, directory, disable, per-CWD)
 
 ### Logging

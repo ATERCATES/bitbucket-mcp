@@ -454,7 +454,7 @@ Get the branching model for a project.
 
 ## Dangerous Tools
 
-The following tools are marked as dangerous and require `BITBUCKET_ALLOW_DANGEROUS=true` to use:
+The following tools are marked as dangerous and require `BITBUCKET_MODE=full` to use:
 
 - `deletePullRequestComment`
 - `deletePullRequestTask`
@@ -462,3 +462,8 @@ The following tools are marked as dangerous and require `BITBUCKET_ALLOW_DANGERO
 - `deleteTag`
 
 These operations cannot be undone and should be used with caution.
+
+**Operation Modes:**
+- `readonly`: Only GET operations allowed
+- `safe`: GET + POST/PUT, but no deletes (default)
+- `full`: All operations including dangerous deletes

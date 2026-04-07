@@ -86,7 +86,7 @@ interface HandlerModule {
 
 **Module Pattern:**
 - **tools**: Defines tool schemas (names, descriptions, input schemas)
-- **dangerousTools**: Lists tools requiring `BITBUCKET_ALLOW_DANGEROUS`
+- **dangerousTools**: Lists tools requiring `BITBUCKET_MODE=full`
 - **createHandlers**: Factory function that returns handler implementations
 
 **Example Structure:**
@@ -128,7 +128,9 @@ Centralized environment variable management:
 - `BITBUCKET_USERNAME`: For Legacy App Password / Basic Auth
 - `BITBUCKET_PASSWORD`: For Legacy App Password / Basic Auth
 - `BITBUCKET_WORKSPACE`: Default workspace
-- `BITBUCKET_ALLOW_DANGEROUS`: Enable dangerous operations
+- `BITBUCKET_MODE`: Operation mode - readonly, safe (default), or full
+- `BITBUCKET_ENABLED_TOOLS`: Comma-separated list of tools to enable
+- `BITBUCKET_DISABLED_TOOLS`: Comma-separated list of tools to disable
 - `BITBUCKET_LOG_*`: Logging configuration
 
 ### 6. Logger (`src/logger.ts`)
@@ -211,9 +213,9 @@ Some operations (delete, remove) are marked dangerous and require explicit enabl
 // In handler module
 dangerousTools: ["deleteBranch", "deleteTag"]
 
-// In server.ts - gates execution
-if (isDangerous && !isDangerousAllowed) {
-  throw error("BITBUCKET_ALLOW_DANGEROUS not set");
+// In server.ts - gates execution based on mode
+if (isDangerous && mode !== "full") {
+  // Tool is filtered out during registration
 }
 ```
 

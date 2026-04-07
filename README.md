@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server for integrating with Bitbucket Cloud and S
 
 ⚡ **Modular Design** - Clean, maintainable architecture organized by feature domain (11 handler modules)
 
-🛡️ **Safety First** - Dangerous operations (deletes) require explicit `BITBUCKET_ALLOW_DANGEROUS=true`
+🛡️ **Safety First** - 3 operation modes (readonly, safe, full) with fine-grained tool control
 
 🚀 **Production Ready** - Built with pnpm, ESLint, Prettier, and modern TypeScript
 
@@ -56,12 +56,22 @@ export BITBUCKET_WORKSPACE="my-workspace"       # Your default workspace name
 **Optional Configuration:**
 
 ```bash
-# Enable dangerous operations (delete branch, delete tag, etc.)
-export BITBUCKET_ALLOW_DANGEROUS=true
+# Server Operation Mode
+export BITBUCKET_MODE="safe"  # readonly | safe (default) | full
+
+# Fine-grained tool control
+export BITBUCKET_ENABLED_TOOLS="getPullRequest,listPullRequests,createPullRequest"
+export BITBUCKET_DISABLED_TOOLS="deleteBranch,deleteRepository"
 
 # Custom API URL (for self-hosted Bitbucket Server)
 export BITBUCKET_URL="https://bitbucket.company.com/rest/api/2.0"
 ```
+
+**🔐 Operation Modes:**
+
+- **`readonly`** - Only GET operations (no modifications)
+- **`safe`** - GET + POST/PUT operations, but no deletes (default)
+- **`full`** - All operations including dangerous deletes
 
 **⚠️ Authentication Notes:**
 - This MCP server strictly enforces **Personal API Tokens** (starting with `ATBB` or `ATATT`)
@@ -97,10 +107,40 @@ Add to your MCP configuration (`.mcp.json` or similar):
       "env": {
         "BITBUCKET_USERNAME": "user@example.com",
         "BITBUCKET_API_TOKEN": "ATBBxxxxxxxxxxxxx",
-        "BITBUCKET_WORKSPACE": "my-workspace"
+        "BITBUCKET_WORKSPACE": "my-workspace",
+        "BITBUCKET_MODE": "safe"
       }
     }
   }
+}
+```
+
+**Examples:**
+
+```json
+// Read-only mode (safe for production analysis)
+{
+  "BITBUCKET_MODE": "readonly"
+}
+
+// Safe mode (default - no deletes)
+{
+  "BITBUCKET_MODE": "safe"
+}
+
+// Full mode (all operations including deletes)
+{
+  "BITBUCKET_MODE": "full"
+}
+
+// Fine-grained control (only specific tools)
+{
+  "BITBUCKET_ENABLED_TOOLS": "getPullRequest,listPullRequests,getPullRequestDiff"
+}
+
+// Blacklist specific tools
+{
+  "BITBUCKET_DISABLED_TOOLS": "deleteBranch,deleteRepository,deleteTag"
 }
 ```
 
@@ -115,7 +155,8 @@ Or with npx:
       "env": {
         "BITBUCKET_USERNAME": "user@example.com",
         "BITBUCKET_API_TOKEN": "ATBBxxxxxxxxxxxxx",
-        "BITBUCKET_WORKSPACE": "my-workspace"
+        "BITBUCKET_WORKSPACE": "my-workspace",
+        "BITBUCKET_MODE": "safe"
       }
     }
   }
@@ -160,7 +201,9 @@ The server provides 59 tools organized into 11 categories:
 
 - `BITBUCKET_WORKSPACE` - Default workspace name (can be provided per-tool call)
 - `BITBUCKET_URL` - API base URL (default: `https://api.bitbucket.org/2.0`)
-- `BITBUCKET_ALLOW_DANGEROUS` - Enable delete operations (default: `false`)
+- `BITBUCKET_MODE` - Operation mode: `readonly`, `safe` (default), or `full`
+- `BITBUCKET_ENABLED_TOOLS` - Comma-separated list of tools to enable (whitelist mode)
+- `BITBUCKET_DISABLED_TOOLS` - Comma-separated list of tools to disable (blacklist mode)
 
 ### Logging (Optional)
 
@@ -281,7 +324,7 @@ Some tools that perform destructive operations are marked as dangerous:
 - `deleteBranch`
 - `deleteTag`
 
-These require `BITBUCKET_ALLOW_DANGEROUS=true` to use, preventing accidental data loss.
+These require `BITBUCKET_MODE=full` to use, preventing accidental data loss.
 
 ## Troubleshooting
 

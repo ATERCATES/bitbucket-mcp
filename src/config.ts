@@ -1,5 +1,4 @@
-import type { BitbucketConfig } from "./types.js";
-import { isTruthyEnv } from "./logger.js";
+import type { BitbucketConfig, BitbucketMode } from "./types.js";
 
 /**
  * Normalize Bitbucket configuration for backward compatibility and DX.
@@ -41,6 +40,14 @@ export function normalizeBitbucketConfig(rawConfig: BitbucketConfig): BitbucketC
 }
 
 /**
+ * Parse comma-separated list of tool names from env var
+ */
+function parseToolList(value: string | undefined): string[] | undefined {
+  if (!value) return undefined;
+  return value.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+/**
  * Load Bitbucket configuration from environment variables.
  * Reads all relevant BITBUCKET_* env vars and returns a normalized config.
  * 
@@ -51,18 +58,27 @@ export function normalizeBitbucketConfig(rawConfig: BitbucketConfig): BitbucketC
  * OPTIONAL:
  * - BITBUCKET_WORKSPACE: Default workspace name
  * - BITBUCKET_URL: API base URL (default: https://api.bitbucket.org/2.0)
- * - BITBUCKET_ALLOW_DANGEROUS: Enable delete operations (default: false)
+ * - BITBUCKET_MODE: Operation mode - readonly, safe (default), or full
+ * - BITBUCKET_ENABLED_TOOLS: Comma-separated list of tools to enable
+ * - BITBUCKET_DISABLED_TOOLS: Comma-separated list of tools to disable
  */
 export function loadConfigFromEnv(): BitbucketConfig {
+  // Determine mode
+  let mode: BitbucketMode = "safe"; // default
+  const modeEnv = process.env.BITBUCKET_MODE?.toLowerCase();
+  
+  if (modeEnv === "readonly" || modeEnv === "safe" || modeEnv === "full") {
+    mode = modeEnv;
+  }
+
   const initialConfig: BitbucketConfig = {
     baseUrl: process.env.BITBUCKET_URL || "https://api.bitbucket.org/2.0",
-    token: process.env.BITBUCKET_API_TOKEN, // Strictly enforce API_TOKEN
+    token: process.env.BITBUCKET_API_TOKEN,
     username: process.env.BITBUCKET_USERNAME,
-    // password field is deliberately omitted to enforce API Token usage
     defaultWorkspace: process.env.BITBUCKET_WORKSPACE,
-    allowDangerousCommands:
-      isTruthyEnv(process.env.BITBUCKET_ENABLE_DANGEROUS) ||
-      isTruthyEnv(process.env.BITBUCKET_ALLOW_DANGEROUS),
+    mode,
+    enabledTools: parseToolList(process.env.BITBUCKET_ENABLED_TOOLS),
+    disabledTools: parseToolList(process.env.BITBUCKET_DISABLED_TOOLS),
   };
 
   return normalizeBitbucketConfig(initialConfig);
