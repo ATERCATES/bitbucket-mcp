@@ -150,6 +150,18 @@ export const prContentModule: HandlerModule = {
             headers: { Accept: "text/plain" },
             responseType: "text",
             maxRedirects: 5,
+            beforeRedirect: (options) => {
+              // Preserve Basic Auth credentials on redirect
+              // The /pullrequests/{id}/diff endpoint returns a 302 redirect, but axios
+              // doesn't automatically preserve auth credentials for security reasons.
+              // We need to manually re-add the auth header to the redirect request.
+              if (client.config.username && client.config.token) {
+                const authString = Buffer.from(
+                  `${client.config.username}:${client.config.token}`
+                ).toString("base64");
+                options.headers.authorization = `Basic ${authString}`;
+              }
+            },
           }
         );
 
