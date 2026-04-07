@@ -1,6 +1,6 @@
 {
   "name": "@atercates/bitbucket-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Model Context Protocol (MCP) server for Bitbucket Cloud and Server API integration",
   "mcpName": "io.github.bitbucket-mcp/bitbucket-mcp",
   "type": "module",
