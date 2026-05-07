@@ -5,7 +5,6 @@ import { jsonResponse, textResponse } from "../utils.js";
 import { logger } from "../logger.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { InlineCommentInline } from "../types.js";
-import { BITBUCKET_MAX_PAGELEN } from "../pagination.js";
 
 /** Schema for inline comment positioning */
 const INLINE_COMMENT_SCHEMA = {
@@ -84,31 +83,6 @@ export const prCommentsModule: HandlerModule = {
           inline: INLINE_COMMENT_SCHEMA,
         },
         required: [...PR_COMMENT_BASE_REQUIRED, "content"],
-      },
-    },
-    {
-      name: "addPendingPullRequestComment",
-      description: "Add a pending (draft) comment to a pull request that can be published later",
-      inputSchema: {
-        type: "object",
-        properties: {
-          ...PR_COMMENT_BASE_PROPERTIES,
-          content: {
-            type: "string",
-            description: "Comment content in markdown format",
-          },
-          inline: INLINE_COMMENT_SCHEMA,
-        },
-        required: [...PR_COMMENT_BASE_REQUIRED, "content"],
-      },
-    },
-    {
-      name: "publishPendingComments",
-      description: "Publish all pending comments for a pull request",
-      inputSchema: {
-        type: "object",
-        properties: PR_COMMENT_BASE_PROPERTIES,
-        required: PR_COMMENT_BASE_REQUIRED,
       },
     },
     {
@@ -228,25 +202,21 @@ export const prCommentsModule: HandlerModule = {
           inline: inline ? "inline comment" : "general comment",
         });
 
-        // Prepare the comment data
         const commentData: Record<string, unknown> = {
           content: {
             raw: content,
           },
         };
 
-        // Add pending flag if provided
         if (pending !== undefined) {
           commentData.pending = pending;
         }
 
-        // Add inline information if provided
         if (inline) {
           const inlineData: Record<string, unknown> = {
             path: inline.path,
           };
 
-          // Add line number information based on the type
           if (inline.from !== undefined) {
             inlineData.from = inline.from;
           }
@@ -273,149 +243,6 @@ export const prCommentsModule: HandlerModule = {
         throw new McpError(
           ErrorCode.InternalError,
           `Failed to add pull request comment: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      }
-    },
-
-    addPendingPullRequestComment: async (args: Record<string, unknown>) => {
-      const workspace = args.workspace as string;
-      const repo_slug = args.repo_slug as string;
-      const pull_request_id = args.pull_request_id as string;
-      const content = args.content as string;
-      const inline = args.inline as InlineCommentInline | undefined;
-
-      try {
-        logger.info("Adding pending comment to Bitbucket pull request", {
-          workspace,
-          repo_slug,
-          pull_request_id,
-          inline: inline ? "inline comment" : "general comment",
-        });
-
-        // Prepare the comment data with pending=true
-        const commentData: Record<string, unknown> = {
-          content: {
-            raw: content,
-          },
-          pending: true,
-        };
-
-        // Add inline information if provided
-        if (inline) {
-          const inlineData: Record<string, unknown> = {
-            path: inline.path,
-          };
-
-          if (inline.from !== undefined) {
-            inlineData.from = inline.from;
-          }
-          if (inline.to !== undefined) {
-            inlineData.to = inline.to;
-          }
-
-          commentData.inline = inlineData;
-        }
-
-        const response = await client.api.post(
-          `/repositories/${workspace}/${repo_slug}/pullrequests/${pull_request_id}/comments`,
-          commentData
-        );
-
-        return jsonResponse(response.data);
-      } catch (error) {
-        logger.error("Error adding pending comment to pull request", {
-          error,
-          workspace,
-          repo_slug,
-          pull_request_id,
-        });
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Failed to add pending pull request comment: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      }
-    },
-
-    publishPendingComments: async (args: Record<string, unknown>) => {
-      const workspace = args.workspace as string;
-      const repo_slug = args.repo_slug as string;
-      const pull_request_id = args.pull_request_id as string;
-
-      try {
-        logger.info("Publishing pending comments for Bitbucket pull request", {
-          workspace,
-          repo_slug,
-          pull_request_id,
-        });
-
-        // First, get all pending comments for the pull request
-        const commentsResult = await client.paginator.fetchValues(
-          `/repositories/${workspace}/${repo_slug}/pullrequests/${pull_request_id}/comments`,
-          {
-            pagelen: BITBUCKET_MAX_PAGELEN,
-            all: true,
-            description: "publishPendingComments",
-          }
-        );
-
-        type PendingComment = {
-          id: number;
-          content: { raw?: string; html?: string; markup?: string };
-          inline?: InlineCommentInline;
-          pending?: boolean;
-        };
-
-        const comments = (commentsResult.values || []) as PendingComment[];
-        const pendingComments = comments.filter((comment) => comment.pending === true);
-
-        if (pendingComments.length === 0) {
-          return textResponse("No pending comments found to publish.");
-        }
-
-        // Publish each pending comment by updating it with pending=false
-        const publishResults = [];
-        for (const comment of pendingComments) {
-          try {
-            const updateResponse = await client.api.put(
-              `/repositories/${workspace}/${repo_slug}/pullrequests/${pull_request_id}/comments/${comment.id}`,
-              {
-                content: comment.content,
-                pending: false,
-                ...(comment.inline && { inline: comment.inline }),
-              }
-            );
-            publishResults.push({
-              commentId: comment.id,
-              status: "published",
-              data: updateResponse.data,
-            });
-          } catch (error) {
-            publishResults.push({
-              commentId: comment.id,
-              status: "error",
-              error: error instanceof Error ? error.message : String(error),
-            });
-          }
-        }
-
-        return jsonResponse({
-          message: `Published ${pendingComments.length} pending comments`,
-          results: publishResults,
-        });
-      } catch (error) {
-        logger.error("Error publishing pending comments", {
-          error,
-          workspace,
-          repo_slug,
-          pull_request_id,
-        });
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Failed to publish pending comments: ${
             error instanceof Error ? error.message : String(error)
           }`
         );
@@ -554,9 +381,6 @@ export const prCommentsModule: HandlerModule = {
   }),
 };
 
-/**
- * Helper function to resolve or reopen a comment thread
- */
 async function setCommentResolved(
   client: BitbucketClient,
   workspace: string,
